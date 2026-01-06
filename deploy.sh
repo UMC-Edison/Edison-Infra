@@ -1,10 +1,6 @@
 #!/bin/bash
 
 # 사용법: ./deploy.sh [spring|ai|all] [tag]
-# 예시:
-#   ./deploy.sh spring abc123    # Spring 서버만 배포
-#   ./deploy.sh ai def456        # AI 서버만 배포
-#   ./deploy.sh all              # 전체 서비스 재시작
 
 set -euo pipefail
 
@@ -45,12 +41,10 @@ case $SERVICE in
         ;;
 esac
 
-# 오래된 이미지 정리
 echo ""
 echo ">> 사용하지 않는 이미지 정리..."
 docker image prune -af
 
-# 상태 확인
 echo ""
 echo ">> 서비스 상태 확인..."
 sleep 5
