@@ -24,8 +24,8 @@ services:
   spring-app:
     image: ${DOCKERHUB_USERNAME}/edison-spring:${SPRING_TAG:-latest}
     container_name: edison-spring
-    ports: 
-      - "8080:8080"
+    expose:    
+      - "8080"
     environment:
       - SPRING_DATASOURCE_URL=${RDS_URL}
       - SPRING_DATASOURCE_USERNAME=${RDS_USERNAME}
@@ -64,8 +64,8 @@ services:
   ai-server:
     image: ${DOCKERHUB_USERNAME}/edison-ai:${AI_TAG:-latest}
     container_name: edison-ai
-    ports: 
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_KEY}
     restart: unless-stopped
@@ -94,6 +94,31 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  nginx:
+    image: nginx:latest
+    container_name: edison-nginx-dev
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - spring-app
+    networks:
+      - edison-network
+    restart: always
+
+  certbot:
+    image: certbot/certbot
+    container_name: edison-certbot-dev
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - edison-network
 
 networks:
   edison-network:
