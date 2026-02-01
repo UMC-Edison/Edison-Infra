@@ -58,6 +58,7 @@ for domain in "${DOMAINS[@]}"; do
         --email "$EMAIL" \
         --agree-tos \
         --no-eff-email \
+        --force-renewal \
         -d "$domain"
 done
 
