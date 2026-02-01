@@ -10,8 +10,8 @@ services:
       - POSTGRES_PASSWORD=${RDS_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    expose:
-      - "5432"
+    ports:
+      - "5432:5432"
     restart: unless-stopped
     networks:
       - edison-network
@@ -24,8 +24,8 @@ services:
   spring-app:
     image: ${DOCKERHUB_USERNAME}/edison-spring:${SPRING_TAG:-latest}
     container_name: edison-spring
-    expose:
-      - "8080"
+    ports: 
+      - "8080:8080"
     environment:
       - SPRING_DATASOURCE_URL=${RDS_URL}
       - SPRING_DATASOURCE_USERNAME=${RDS_USERNAME}
@@ -64,8 +64,8 @@ services:
   ai-server:
     image: ${DOCKERHUB_USERNAME}/edison-ai:${AI_TAG:-latest}
     container_name: edison-ai
-    expose:
-      - "8000"
+    ports: 
+      - "8000:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_KEY}
     restart: unless-stopped
