@@ -1,27 +1,4 @@
-cat << 'EOF' > docker-compose.dev.yml
-version: '3.8'
-
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: edison-postgres-dev
-    environment:
-      - POSTGRES_DB=edison_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${RDS_PASSWORD}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    restart: unless-stopped
-    networks:
-      - edison-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   spring-app:
     image: ${DOCKERHUB_USERNAME}/edison-spring:${SPRING_TAG:-latest}
     container_name: edison-spring
@@ -50,8 +27,6 @@ services:
       - CLOUD_AWS_S3_BUCKET=${CLOUD_AWS_S3_BUCKET}
       - SERVER_FORWARD_HEADERS_STRATEGY=framework
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
@@ -98,9 +73,8 @@ services:
       timeout: 5s
       retries: 5
 
-  # === 추가된 Nginx 설정 ===
-  edison-nginx:
-    image: nginx:latest
+  nginx:
+    image: nginx:alpine
     container_name: edison-nginx
     ports:
       - "80:80"
@@ -109,23 +83,27 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
+    depends_on:
+      - spring-app
+      - ai-server
     networks:
       - edison-network
     restart: unless-stopped
 
-  # === 추가된 Certbot 설정 ===
   certbot:
     image: certbot/certbot
     container_name: edison-certbot
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    restart: unless-stopped
+    networks:
+      - edison-network
 
 networks:
   edison-network:
     driver: bridge
 
 volumes:
-  postgres-data:
   redis-data:
-EOF
